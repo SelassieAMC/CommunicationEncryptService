@@ -1,10 +1,10 @@
-sc create ServicioCliente binPath= "C:\Users\andcl\Documents\ProgramaciÃ³n\Publicaciones\dotnet_core\servicioCliente\servicioCliente.exe"
+sc create ServicioCliente binPath= "C:\Users\andcl\Documents\Programación\Publicaciones\dotnet_core\servicioCliente" obj=".\usuarioServicio" password= "usuarioNuevo"
 
 sc start ServicioCliente
 
 sc query ServicioCliente
-sc stop MyService
-sc delete MyService
+sc stop ServicioCliente
+sc delete ServicioCliente
 
 Acceso: http://localhost:5000/
 
