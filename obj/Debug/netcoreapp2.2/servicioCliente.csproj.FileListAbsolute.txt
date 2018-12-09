@@ -1,0 +1,14 @@
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Debug\netcoreapp2.2\servicioCliente.deps.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Debug\netcoreapp2.2\servicioCliente.runtimeconfig.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Debug\netcoreapp2.2\servicioCliente.runtimeconfig.dev.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Debug\netcoreapp2.2\servicioCliente.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Debug\netcoreapp2.2\servicioCliente.pdb
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.csprojAssemblyReference.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.csproj.CoreCompileInputs.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.RazorAssemblyInfo.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.RazorAssemblyInfo.cs
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.AssemblyInfoInputs.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.AssemblyInfo.cs
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.RazorTargetAssemblyInfo.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Debug\netcoreapp2.2\servicioCliente.pdb
