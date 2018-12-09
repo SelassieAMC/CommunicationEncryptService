@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using servicioCliente.Encryptionlogic;
 using servicioCliente.Models;
 
@@ -8,13 +9,18 @@ namespace servicioCliente.Controllers
     [ApiController]
     public class EncryptionController : ControllerBase
     {
+        private readonly IOptions<ParametersModel> Parameters;
+        public EncryptionController(IOptions<ParametersModel> config){
+            Parameters = config;
+        }
+
         [HttpPost]
         public string GenerateOwnRSAKey(KeyService keyService){
             //Store the key's partner
             //Generate own keys for RSA Encryption
             RSAEncryption rsaEncryption = new RSAEncryption();
             RSAModel rsaModel = new RSAModel();
-            rsaModel = rsaEncryption.GeneratePubPrivKeys();
+            rsaModel = rsaEncryption.GeneratePubPrivKeys(Parameters);
             //return the publicKey
             return rsaModel.PublicKey;
         }

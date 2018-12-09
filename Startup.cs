@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using servicioCliente.Models;
 
 namespace servicioCliente
 {
@@ -26,6 +27,9 @@ namespace servicioCliente
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            //Adding read property from appsettings parameters section
+            services.Configure<ParametersModel>(Configuration.GetSection("Parameters"));
+            services.AddOptions();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
