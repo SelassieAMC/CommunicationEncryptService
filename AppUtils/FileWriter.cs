@@ -1,10 +1,11 @@
 using Microsoft.Extensions.Options;
 using servicioCliente.Models;
+using System;
 using System.IO;
+using static servicioCliente.AppUtils.Enums;
 
 namespace servicioCliente.AppUtils
 {
-
     public class FileWriter
     {
         private readonly IOptions<ParametersModel> parameters;
@@ -15,42 +16,38 @@ namespace servicioCliente.AppUtils
             bool operationSucces = false;
             try
             {
-                if(!Directory.Exists(path)){
-                    Directory.CreateDirectory(path);
-                    WriteOnEvents("Info\tPath "+path+" creado.");
+                if(!Directory.Exists(@path)){
+                    Directory.CreateDirectory(@path);
+                    WriteOnEvents(EventLevel.Info,"Path "+path+" creado.");
                 }
-                using (StreamWriter file = new StreamWriter(@path+fileName, true))
+                using (StreamWriter file = new StreamWriter(@path+fileName, false))
                 {
                     file.WriteLine(message);
+                    WriteOnEvents(EventLevel.Info,"Escritura llave privada exitosa!!");
+                    operationSucces = true;
                 }
             }
             catch (System.Exception ex)
             {
-                WriteOnEvents("Exception\tExcepcion en FileWriter\t"+ex.Message);
+                WriteOnEvents(EventLevel.Exception,"Excepcion en FileWriter\t"+ex.Message);
             }
             return operationSucces;
         }
 
-        public void WriteOnEvents(string message){
+        public void WriteOnEvents(EventLevel eventLevel,string message){
             string pathLogs = parameters.Value.FilesOutput+parameters.Value.LogEventsFile;
             try
             {
-                // if(!File.Exists(@pathLogs)){
-                //     using(FileStream fs = File.Create(@pathLogs)){
-                //     //do nothing, only create the file
-                //     }
-                // }
                 using (StreamWriter file = new StreamWriter(@pathLogs, true))
                 {
-                    file.WriteLine(message);
+                    string tabs = (eventLevel == EventLevel.Info || eventLevel == EventLevel.Error)?"\t\t":"\t";
+                    file.WriteLine(eventLevel+tabs+DateTime.Now+"\t"+message);
                 }
             }
             catch (System.Exception)
             {
                 //do nothing, there isn't way to save this event
             }
-
-
         }
     }
 }

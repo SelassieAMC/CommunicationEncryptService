@@ -2,6 +2,7 @@ using System;
 using Microsoft.Extensions.Options;
 using servicioCliente.AppUtils;
 using servicioCliente.Models;
+using static servicioCliente.AppUtils.Enums;
 
 namespace servicioCliente.Encryptionlogic{
     public class RSAEncryption{
@@ -19,12 +20,12 @@ namespace servicioCliente.Encryptionlogic{
                 if(fw.WriteOnFile(param.Value.FilesOutput,param.Value.PrivKeyFile,rsaModel.PrivateKey)){
                     //Encrypt private key file
                 }else{
-                    fw.WriteOnEvents("Error\tError en la creacion del archivo de llave privada propia.");
+                    fw.WriteOnEvents(EventLevel.Error,"Error en la creacion del archivo de llave privada propia.");
                 }
             }
             catch (System.Exception ex)
             {
-                fw.WriteOnEvents("Exception\tExcepcion en RSAEncryption.GeneratePubPrivKeys\t"+ex.Message);
+                fw.WriteOnEvents(EventLevel.Exception,"Excepcion en RSAEncryption.GeneratePubPrivKeys\t"+ex.Message);
             }
             return rsaModel;
         }
