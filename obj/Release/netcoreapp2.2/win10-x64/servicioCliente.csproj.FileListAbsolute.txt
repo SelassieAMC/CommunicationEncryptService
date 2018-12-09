@@ -1,0 +1,17 @@
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\hostpolicy.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\hostfxr.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.exe
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.deps.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.runtimeconfig.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.runtimeconfig.dev.json
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\bin\Release\netcoreapp2.2\win10-x64\servicioCliente.pdb
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.csprojAssemblyReference.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.csproj.CoreCompileInputs.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.RazorAssemblyInfo.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.RazorAssemblyInfo.cs
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.AssemblyInfoInputs.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.AssemblyInfo.cs
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.RazorTargetAssemblyInfo.cache
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.dll
+C:\Users\andcl\Documents\Programación\dotnet_core\servicioCliente\obj\Release\netcoreapp2.2\win10-x64\servicioCliente.pdb
