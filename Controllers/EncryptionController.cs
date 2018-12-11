@@ -1,9 +1,12 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using servicioCliente.AppUtils;
 using servicioCliente.Encryptionlogic;
 using servicioCliente.Models;
+using servicioCliente.ServiceServer;
 using static servicioCliente.AppUtils.Enums;
 
 namespace servicioCliente.Controllers
@@ -36,10 +39,16 @@ namespace servicioCliente.Controllers
         public string RequestPartnerKeys(KeyService keyService){
             bool partnerOk=false;
             //Call Server Service for Get partner Keys
-
+            string keyPartner = "";
+            PartnerCalls callPartner = new PartnerCalls(parameters.Value.EndpointServer,parameters.Value.RequestKeyPartner);
+            var response = callPartner.RequestPartnerKey(CancellationToken.None,keyService);
+            response.ContinueWith(task=>{
+                keyPartner = task.Result;
+            }, TaskContinuationOptions.OnlyOnRanToCompletion);
             //if the answer of the server is partner online, return keys, else wait for the answer
+            partnerOk = keyPartner!=""?true:false;
             if(partnerOk){
-                return "keysOk";
+                return keyPartner;
             }
             else{
                 return "Partner is offline";

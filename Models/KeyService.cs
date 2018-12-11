@@ -1,3 +1,6 @@
+using System;
+using System.Net.Http;
+
 namespace servicioCliente.Models
 {
     public class KeyService{
@@ -6,5 +9,6 @@ namespace servicioCliente.Models
         public string destinationIp { get; set; }
         public string keySignature { get; set; }
         public string keyEncrypt { get; set; }
+
     }    
 }

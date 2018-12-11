@@ -12086,11 +12086,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\andcl\\Documents\\Programación\\dotnet_core\\servicioCliente\\servicioCliente.csproj",
+      "projectUniqueName": "c:\\Users\\andcl\\Documents\\Programación\\Proyectos\\dotnet_core\\servicioCliente\\servicioCliente.csproj",
       "projectName": "servicioCliente",
-      "projectPath": "C:\\Users\\andcl\\Documents\\Programación\\dotnet_core\\servicioCliente\\servicioCliente.csproj",
+      "projectPath": "c:\\Users\\andcl\\Documents\\Programación\\Proyectos\\dotnet_core\\servicioCliente\\servicioCliente.csproj",
       "packagesPath": "C:\\Users\\andcl\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\andcl\\Documents\\Programación\\dotnet_core\\servicioCliente\\obj\\",
+      "outputPath": "c:\\Users\\andcl\\Documents\\Programación\\Proyectos\\dotnet_core\\servicioCliente\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
