@@ -10,24 +10,26 @@ namespace servicioCliente.Encryptionlogic{
         public FileWriter fw;
         public RSAEncryption(){}
         ///Generation RSA Keys
-        public string GeneratePubPrivKeys(IOptions<ParametersModel> param )
+        public string GeneratePubPrivKeys()
         {
-            fw = new FileWriter(param);
             RSAModel rsaModel = new RSAModel();
-            rsaModel = GenerateOwnRSAKeys(param);
+            rsaModel = GenerateOwnRSAKeys();
             try
             {
                 //Writing private key for RSA Encryption
-                if(fw.WriteOnFile(param.Value.FilesOutput,param.Value.PrivKeyFile,rsaModel.PrivateKey)){
+                if(FileWriter.WriteOnFile(FileWriter.parameters.Value.FilesOutput,
+                        FileWriter.parameters.Value.PrivKeyFile,
+                        rsaModel.PrivateKey)){
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Creacion del archivo de llave privada exitoso.");
                     //Encrypt private key file
-                    
+                    //Seguimos aqui...                    
                 }else{
-                    fw.WriteOnEvents(EventLevel.Error,"Error en la creacion del archivo de llave privada propia.");
+                    FileWriter.WriteOnEvents(EventLevel.Error,"Error en la creacion del archivo de llave privada propia.");
                 }
             }
             catch (System.Exception ex)
             {
-                fw.WriteOnEvents(EventLevel.Exception,"Excepcion en RSAEncryption.GeneratePubPrivKeys\t"+ex.Message);
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en RSAEncryption.GeneratePubPrivKeys\t"+ex.Message);
             }
             return rsaModel.PublicKey;
         }
@@ -35,16 +37,17 @@ namespace servicioCliente.Encryptionlogic{
         /// Metodo que genera llaves publica y privada del algoritmo RSA
         /// </summary>
         /// <returns>Modelo con informacion de llaves generadas</returns>
-        private RSAModel GenerateOwnRSAKeys(IOptions<ParametersModel> param)
+        private RSAModel GenerateOwnRSAKeys()
         {
-            int keySize = param.Value.KeyRSASize;
+            int keySize = FileWriter.parameters.Value.KeyRSASize;
             RSACryptoServiceProvider cryptoServiceProvider = new RSACryptoServiceProvider(keySize);
             RSAModel rsaModel = new RSAModel();
             try
             {
+                FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de creacion de llaves.");
                 RSAParameters publicKey = cryptoServiceProvider.ExportParameters(false);
                 RSAParameters privateKey = cryptoServiceProvider.ExportParameters(true);
-
+                FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de creacion de llaves RSA exitoso.");
                 string publicKeyString = GetStringFromKey(publicKey);
                 string privateKeyString = GetStringFromKey(privateKey);
                 rsaModel.PrivateKey = privateKeyString;
@@ -52,7 +55,7 @@ namespace servicioCliente.Encryptionlogic{
             }
             catch (System.Exception ex)
             {
-                fw.WriteOnEvents(EventLevel.Exception,"Error generando llaves RSA. "+ex.Message);
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Error generando llaves RSA. "+ex.Message);
             }
             return rsaModel;
         }

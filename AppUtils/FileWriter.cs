@@ -8,11 +8,11 @@ namespace servicioCliente.AppUtils
 {
     public class FileWriter
     {
-        private readonly IOptions<ParametersModel> parameters;
-        public FileWriter(IOptions<ParametersModel> param){
-            parameters = param;
-        }
-        public bool WriteOnFile(string path,string fileName,string message){
+        public static IOptions<ParametersModel> parameters;
+        // public FileWriter(IOptions<ParametersModel> param){
+        //     parameters = param;
+        // }
+        public static bool WriteOnFile(string path,string fileName,string message){
             bool operationSucces = false;
             try
             {
@@ -34,7 +34,7 @@ namespace servicioCliente.AppUtils
             return operationSucces;
         }
 
-        public void WriteOnEvents(EventLevel eventLevel,string message){
+        public static void WriteOnEvents(EventLevel eventLevel,string message){
             string pathLogs = parameters.Value.FilesOutput+parameters.Value.LogEventsFile;
             try
             {

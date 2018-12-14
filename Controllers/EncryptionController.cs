@@ -1,6 +1,9 @@
+using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using servicioCliente.AppUtils;
@@ -16,51 +19,53 @@ namespace servicioCliente.Controllers
     public class EncryptionController : ControllerBase
     {
         private readonly IOptions<ParametersModel> parameters;
-        private readonly FileWriter fw;
         public EncryptionController(IOptions<ParametersModel> config){
             parameters = config;
-            fw = new FileWriter(parameters);
+            FileWriter.parameters = config;
         }
-
         [HttpPost]
-        public IActionResult GenerateClientRSAKey(KeyService keyService){
-            //Store the key's partner
-            var jsonObj = JsonConvert.SerializeObject(keyService);
-            // fw.WriteOnEvents(EventLevel.Atention,"ObjKeyService recibido "+ JsonConvert.DeserializeObject(jsonObj));
-            fw.WriteOnEvents(EventLevel.Atention,"ObjKeyService recibido "+ string.Join(", ",jsonObj));
-            fw.WriteOnFile(parameters.Value.FilesOutput,parameters.Value.PubKeyFile,keyService.keyEncrypt);
-            //Generate own keys for RSA Encryption
+        public IActionResult GenerateRSAKeys(InfoClients infoclient){
+            //Serialize and store the request info
+            var jsonObj = JsonConvert.SerializeObject(infoclient);
+            FileWriter.WriteOnEvents(EventLevel.Info,"ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            string publicKey = rsaEncryption.GeneratePubPrivKeys(parameters);
-            //Fill object to response request
-            KeyService response = new KeyService{
-                originIp = "own ip address",
-                destinationIp = keyService.originIp,
-                keyEncrypt = publicKey
-            };
-            //return the publicKey
-            return Ok(response);
-        }
-
-        [HttpPost]
-        public IActionResult RequestPartnerKeys(KeyService keyService){
-            bool partnerOk=false;
-            fw.WriteOnEvents(EventLevel.Info,"Llamado por llaves al servidor");
-            //Call Server Service for Get partner Keys
-            string keyPartner = "";
-            PartnerCalls callPartner = new PartnerCalls(parameters.Value.EndpointServer,parameters.Value.RequestKeyPartner);
-            var response = callPartner.RequestPartnerKey(keyService);
-            response.ContinueWith(task=>{
-                keyPartner = task.Result;
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
-            //if the answer of the server is partner online, return keys, else wait for the answer
-            partnerOk = keyPartner!=""?true:false;
-            if(partnerOk){
-                return Ok(partnerOk);
+            string publicKey = rsaEncryption.GeneratePubPrivKeys();
+            //Call the server service to send my public key to my partner 
+            if(SendMyPublicKey(infoclient)){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de generacion y envio de llaves realizado de forma correcta.");
+                return Ok("Proceso de generacion y envio de llaves realizado de forma correcta.");
             }
-            else{
-                return NotFound(partnerOk);
-            }       
+            FileWriter.WriteOnEvents(EventLevel.Atention,"Ocurrieron errores en el proceso, verifique e intente nuevamente.");
+            return BadRequest("Ocurrieron errores en el proceso, verifique el log e intente nuevamente.");
+        } 
+        public bool SendMyPublicKey(InfoClients infoClients){
+            bool result = false;
+            FileWriter.WriteOnEvents(EventLevel.Info,"Llamado al servidor para entrega de llave privada.");
+            try
+            {
+                ServerRequest callPartner = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.RequestKeyPartner);
+                HttpStatusCode resultCode = new HttpStatusCode();
+                Task<HttpStatusCode> response = callPartner.RequestPartnerKey(infoClients);
+                response.ContinueWith(task=>{
+                    resultCode = task.Result;
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                //Check the response values, if isn´t success set false
+                if(!resultCode.Equals(200)){
+                    FileWriter.WriteOnEvents(EventLevel.Atention,"Respuesta no satisfactoria. resultCode:"+ resultCode);
+                    result = false;
+                }
+                else{
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Llave enviada de forma satisfactoria. resultCode:"+ resultCode);
+                    result = true;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en GenerateRSAKeys. "+ ex.Message);
+                result = false;
+            }
+            return result;
         }
     }
 }

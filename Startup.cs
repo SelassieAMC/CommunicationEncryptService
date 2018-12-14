@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +31,10 @@ namespace servicioCliente
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             //Adding read property from appsettings parameters section
             services.Configure<ParametersModel>(Configuration.GetSection("Parameters"));
+            // services.AddDataProtection().PersistKeysToFileSystem(
+            //         new DirectoryInfo(@Configuration.GetValue<string>("FilesOutput")));
+            //Only the local user can decrypt the keys
+            //services.AddDataProtection().ProtectKeysWithDpapi();
             services.AddOptions();
         }
 
