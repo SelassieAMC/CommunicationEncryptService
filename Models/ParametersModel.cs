@@ -8,5 +8,6 @@ namespace servicioCliente.Models
         public string LogEventsFile { get; set; }
         public string EndpointServer { get; set; }
         public string RequestKeyPartner { get; set; }
+        public int KeyRSASize { get; set; }
     }
 }

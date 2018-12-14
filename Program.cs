@@ -14,7 +14,18 @@ namespace servicioCliente
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            CreateWebHostBuilder(args)
+                .UseKestrel()
+                .UseUrls("http://localhost:5000", "http://*:5000")
+                .Build()
+                .Run();
+            // var host = new WebHostBuilder()
+            //     .UseKestrel()
+            //     .UseContentRoot(Directory.GetCurrentDirectory())
+            //     .UseUrls("http://localhost:5000", "http://*:5000","https://*:5001")
+            //     .UseIISIntegration()
+            //     .UseStartup<Startup>()
+            //     .Build();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
