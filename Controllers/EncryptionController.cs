@@ -23,14 +23,19 @@ namespace servicioCliente.Controllers
             parameters = config;
             FileWriter.parameters = config;
         }
-        [HttpPost]
+        /// <summary>
+        /// Funcion A - Genera Primera Llave
+        /// </summary>
+        /// <param name="infoclient"></param>
+        /// <returns></returns>
+        [HttpPost] 
         public IActionResult GenerateRSAKeys(InfoClients infoclient){
             //Serialize and store the request info
             var jsonObj = JsonConvert.SerializeObject(infoclient);
-            FileWriter.WriteOnEvents(EventLevel.Info,"ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            FileWriter.WriteOnEvents(EventLevel.Info,"Request en GenerateRSAKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            string publicKey = rsaEncryption.GeneratePubPrivKeys();
+            infoclient.RSAKey = rsaEncryption.GeneratePubPrivKeys(infoclient.userDestino);
             //Call the server service to send my public key to my partner 
             if(SendMyPublicKey(infoclient)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de generacion y envio de llaves realizado de forma correcta.");
@@ -66,6 +71,45 @@ namespace servicioCliente.Controllers
                 result = false;
             }
             return result;
+        }
+        /// <summary>
+        /// Funcion B - Recibe llave, elimina anterior y genera llave
+        /// </summary>
+        /// <param name="infoClients"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult RequestStoreKeys(InfoClients infoClients){
+            //Write Event
+            var jsonObj = JsonConvert.SerializeObject(infoClients);
+            FileWriter.WriteOnEvents(EventLevel.Info,
+                        "Request en RequestStoreKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            //Store partner's public key
+            FileWriter.WriteOnFile(parameters.Value.FilesOutput,
+                        parameters.Value.PrivKeyFile+infoClients.userOrigen,infoClients.RSAKey);
+            FileWriter.WriteOnEvents(EventLevel.Info,
+                        "Llave publica de"+ infoClients.userOrigen+"almacenada.");
+            //Generate the own RSA Keys
+            RSAEncryption rsaEncryption = new RSAEncryption();
+            infoClients.RSAKey = rsaEncryption.GeneratePubPrivKeys(infoClients.userOrigen);
+            return Ok(infoClients);
+        }
+        /// <summary>
+        /// Funcion C - Recibe y Guarda Llave
+        /// </summary>
+        /// <param name="infoClients"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult StoreKey(InfoClients infoClients){
+            return Ok();
+        }
+        /// <summary>
+        /// Funcion D - Valida existencia llave del usuario origen
+        /// </summary>
+        /// <param name="infoClients"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public IActionResult ValidateUserKey(InfoClients infoClients){
+            return Ok();
         }
     }
 }
