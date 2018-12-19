@@ -29,13 +29,13 @@ namespace servicioCliente.Controllers
         /// <param name="infoclient"></param>
         /// <returns></returns>
         [HttpPost] 
-        public IActionResult GenerateRSAKeys(InfoClients infoclient){
+        public IActionResult GeneratekeyEncrypts(InfoClients infoclient){
             //Serialize and store the request info
             var jsonObj = JsonConvert.SerializeObject(infoclient);
-            FileWriter.WriteOnEvents(EventLevel.Info,"Request en GenerateRSAKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            FileWriter.WriteOnEvents(EventLevel.Info,"Request en GeneratekeyEncrypts ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            infoclient.RSAKey = rsaEncryption.GeneratePubPrivKeys(infoclient.userDestino);
+            infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination);
             //Call the server service to send my public key to my partner 
             if(SendMyPublicKey(infoclient)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de generacion y envio de llaves realizado de forma correcta.");
@@ -56,7 +56,7 @@ namespace servicioCliente.Controllers
                     resultCode = task.Result;
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 //Check the response values, if isn´t success set false
-                if(!resultCode.Equals(200)){
+                if(resultCode.Equals(404)){
                     FileWriter.WriteOnEvents(EventLevel.Atention,"Respuesta no satisfactoria. resultCode:"+ resultCode);
                     result = false;
                 }
@@ -67,7 +67,7 @@ namespace servicioCliente.Controllers
             }
             catch (System.Exception ex)
             {
-                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en GenerateRSAKeys. "+ ex.Message);
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en GeneratekeyEncrypts. "+ ex.Message);
                 result = false;
             }
             return result;
@@ -85,21 +85,42 @@ namespace servicioCliente.Controllers
                         "Request en RequestStoreKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Store partner's public key
             FileWriter.WriteOnFile(parameters.Value.FilesOutput,
-                        parameters.Value.PrivKeyFile+infoClients.userOrigen,infoClients.RSAKey);
+                        parameters.Value.PrivKeyFile+infoClients.userNameDestination,infoClients.keyEncrypt);
             FileWriter.WriteOnEvents(EventLevel.Info,
-                        "Llave publica de"+ infoClients.userOrigen+"almacenada.");
-            //Generate the own RSA Keys
+                        "Llave publica de "+ infoClients.userNameDestination+" almacenada.");
+            //Delete and generate the own RSA Keys
+            infoClients.keyEncrypt="";
             RSAEncryption rsaEncryption = new RSAEncryption();
-            infoClients.RSAKey = rsaEncryption.GeneratePubPrivKeys(infoClients.userOrigen);
-            return Ok(infoClients);
+            infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameDestination);
+            if(infoClients.keyEncrypt !=""){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Devolviendo llaves generadas.");
+                return Ok(infoClients);
+            }else{
+                FileWriter.WriteOnEvents(EventLevel.Error,"Error generando llaves.");
+                return BadRequest(infoClients);
+            }
         }
         /// <summary>
-        /// Funcion C - Recibe y Guarda Llave
+        /// Funcion C - Recibe y Guarda Llave Publica
         /// </summary>
         /// <param name="infoClients"></param>
         /// <returns></returns>
         [HttpPost]
         public IActionResult StoreKey(InfoClients infoClients){
+            //Write Event
+            var jsonObj = JsonConvert.SerializeObject(infoClients);
+            FileWriter.WriteOnEvents(EventLevel.Info,
+                        "Request en RequestStoreKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            //Check data
+            if(infoClients.keyEncrypt == ""){
+                FileWriter.WriteOnEvents(EventLevel.Error,"Llave recibida vacia, no se puede almacenar.");
+                return Ok(new {mensaje="Llave vacia."});
+            }
+            //Store partner's public key
+            FileWriter.WriteOnFile(parameters.Value.FilesOutput,
+                        parameters.Value.PubKeyFile+infoClients.userNameOrigin,infoClients.keyEncrypt);
+            FileWriter.WriteOnEvents(EventLevel.Info,
+                        "Llave publica de "+ infoClients.userNameOrigin+" almacenada.");
             return Ok();
         }
         /// <summary>
@@ -109,7 +130,18 @@ namespace servicioCliente.Controllers
         /// <returns></returns>
         [HttpPost]
         public IActionResult ValidateUserKey(InfoClients infoClients){
-            return Ok();
+            //Write Event
+            var jsonObj = JsonConvert.SerializeObject(infoClients);
+            FileWriter.WriteOnEvents(EventLevel.Info,
+                        "Request en ValidateUserKey ObjKeyService recibido "+ string.Join(", ",jsonObj));
+            RSAEncryption RSAencr = new RSAEncryption();
+            //Check if the key container exist
+            if(RSAencr.KeysPartnerExists(infoClients.userNameOrigin)){
+                return Ok(new {Result= true});
+            }
+            else{
+                return Ok(new{Result = false});
+            }
         }
     }
 }

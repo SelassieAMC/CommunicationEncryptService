@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using servicioCliente.AppUtils;
 using servicioCliente.Models;
+using servicioCliente.ServiceServer;
 using static servicioCliente.AppUtils.Enums;
 
 namespace servicioCliente.Encryptionlogic{
@@ -13,51 +14,34 @@ namespace servicioCliente.Encryptionlogic{
         public string GeneratePubPrivKeys(string partnerKeys)
         {
             RSAModel rsaModel = new RSAModel();
-            rsaModel = GenerateOwnRSAKeys(partnerKeys);
-            try
-            {
-                //No necesito guardar la llave privada,windows lo hace
-                //Writing private key for RSA Encryption
-                // if(FileWriter.WriteOnFile(FileWriter.parameters.Value.FilesOutput,
-                //         FileWriter.parameters.Value.PrivKeyFile,
-                //         rsaModel.PrivateKey)){
-                //     FileWriter.WriteOnEvents(EventLevel.Info,"Creacion del archivo de llave privada exitoso.");
-                //     //Encrypt private key file
-                //     //Seguimos aqui...                    
-                // }else{
-                //     FileWriter.WriteOnEvents(EventLevel.Error,"Error en la creacion del archivo de llave privada propia.");
-                // }
+            FileWriter.WriteOnEvents(EventLevel.Info,"Verificando la existencia de la llave a generar.");
+            if(KeysPartnerExists(partnerKeys)){
+                DeleteKeysPartner(partnerKeys);
             }
-            catch (System.Exception ex)
-            {
-                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en RSAEncryption.GeneratePubPrivKeys\t"+ex.Message);
-            }
+            rsaModel = GenerateOwnkeyEncrypts(partnerKeys);
             return rsaModel.PublicKey;
         }
         /// <summary>
         /// Metodo que genera llaves publica y privada del algoritmo RSA
         /// </summary>
         /// <returns>Modelo con informacion de llaves generadas</returns>
-        private RSAModel GenerateOwnRSAKeys(string partnerKeys)
+        private RSAModel GenerateOwnkeyEncrypts(string partnerKeys)
         {
             int keySize = FileWriter.parameters.Value.KeyRSASize;
             CspParameters cp = new CspParameters();
-            cp.KeyContainerName = "OwnRSAKeys"+partnerKeys;
-
-            RSACryptoServiceProvider cryptoServiceProvider = new RSACryptoServiceProvider(keySize,cp);
             RSAModel rsaModel = new RSAModel();
             try
             {
+                cp.KeyContainerName = "OwnkeyEncrypts"+partnerKeys;
+                RSACryptoServiceProvider cryptoServiceProvider = new RSACryptoServiceProvider(keySize,cp);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de creacion de llaves.");
-                // RSAParameters publicKey = cryptoServiceProvider.ExportParameters(false);
-                // RSAParameters privateKey = cryptoServiceProvider.ExportParameters(true);
-                string publicKey = cryptoServiceProvider.ToXmlString(false);
-                //string privateKey = cryptoServiceProvider.ToXmlString(true); //No necesito tocar la privada
+                RSAParameters publicKey = cryptoServiceProvider.ExportParameters(false);
+                RSAParameters privateKey = cryptoServiceProvider.ExportParameters(true);
+                //string publicKey = cryptoServiceProvider.ToXmlString(false);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de creacion de llaves RSA exitoso.");
-                // string publicKeyString = GetStringFromKey(publicKey);
-                // string privateKeyString = GetStringFromKey(privateKey);
-                rsaModel.PrivateKey = publicKey;
-                //rsaModel.PublicKey = privateKey;
+                string publicKeyString = GetStringFromKey(publicKey);
+                string privateKeyString = GetStringFromKey(privateKey);
+                rsaModel.PublicKey = publicKeyString;
             }
             catch (System.Exception ex)
             {
@@ -66,12 +50,56 @@ namespace servicioCliente.Encryptionlogic{
             return rsaModel;
         }
 
-        // private string GetStringFromKey(RSAParameters publicKey)
-        // {
-        //     var stringWriter = new System.IO.StringWriter();
-        //     var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-        //     xmlSerializer.Serialize(stringWriter, publicKey);
-        //     return stringWriter.ToString();
-        // }
+        private string GetStringFromKey(RSAParameters publicKey)
+        {
+            var stringWriter = new System.IO.StringWriter();
+            var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
+            xmlSerializer.Serialize(stringWriter, publicKey);
+            return stringWriter.ToString();
+        }
+        /// <summary>
+        /// Valida si las llaves solicitadas existen
+        /// </summary>
+        /// <param name="containerName"></param>
+        /// <returns>true = Existen;false = No existen</returns>
+        public bool KeysPartnerExists(string containerName){
+            CspParameters cspParameters = new CspParameters{
+                Flags =CspProviderFlags.UseExistingKey,
+                KeyContainerName = "OwnkeyEncrypts"+containerName
+            };
+            try
+            {
+                RSACryptoServiceProvider RSAcsp = new RSACryptoServiceProvider(cspParameters);
+                FileWriter.WriteOnEvents(EventLevel.Atention,"La llave solicitada ya existe.");
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Atention,"La llave solicitada no existe. "+ex.Message);
+                return false;
+            }
+        }
+        /// <summary>
+        /// Elimina el contenedor con las llaves indicadas
+        /// </summary>
+        /// <param name="containerName"></param>
+        /// <returns>true = Eliminado; false = Error</returns>
+        public bool DeleteKeysPartner(string containerName){
+            CspParameters cp = new CspParameters();  
+            cp.KeyContainerName = "OwnkeyEncrypts"+containerName;  
+            try
+            {
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(cp);  
+                rsa.PersistKeyInCsp = false;    
+                rsa.Clear();
+                FileWriter.WriteOnEvents(EventLevel.Atention,"Las llaves del contenedor "+containerName+" fueron eliminadas."); 
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Error intentando eliminar las llaves de "+containerName+". "+ex.Message);
+                return false;
+            }
+        }
     }
 }

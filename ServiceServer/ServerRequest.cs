@@ -26,7 +26,7 @@ namespace servicioCliente.ServiceServer
             }
             catch (System.Exception ex)
             {
-                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion seteando parametros de peticio. "+ex.Message);
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion seteando parametros de petición. "+ex.Message);
                 DefineCallParams(baseURI,method);
                 client.CancelPendingRequests();
                 if(count==4) return;
@@ -48,7 +48,7 @@ namespace servicioCliente.ServiceServer
         public async Task<HttpStatusCode> RequestPartnerKey(InfoClients infoClients){
             try
             {
-                var myRequest = (HttpWebRequest)WebRequest.Create(client.BaseAddress);
+                var myRequest = (HttpWebRequest)WebRequest.Create("http://192.168.0.17:8080/key_service_ms/resources/keyService");
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,infoClients);

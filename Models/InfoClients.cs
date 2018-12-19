@@ -2,8 +2,8 @@ namespace servicioCliente.Models
 {
     public class InfoClients
     {
-        public string userOrigen { get; set; }
-        public string userDestino { get; set; }
-        public string RSAKey { get; set; }
+        public string userNameOrigin { get; set; }
+        public string userNameDestination { get; set; }
+        public string keyEncrypt { get; set; }
     }
 }
