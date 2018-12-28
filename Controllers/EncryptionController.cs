@@ -11,6 +11,7 @@ using servicioCliente.Encryptionlogic;
 using servicioCliente.Models;
 using servicioCliente.ServiceServer;
 using static servicioCliente.AppUtils.Enums;
+using servicioCliente.SignLogic;
 
 namespace servicioCliente.Controllers
 {
@@ -35,7 +36,8 @@ namespace servicioCliente.Controllers
             FileWriter.WriteOnEvents(EventLevel.Info,"Request en GeneratekeyEncrypts ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination);
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoclient.userNameDestination;
+            infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination,filePublicKey);
             //Call the server service to send my public key to my partner 
             if(SendMyPublicKey(infoclient)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de generacion y envio de llaves realizado de forma correcta.");
@@ -91,7 +93,9 @@ namespace servicioCliente.Controllers
             //Delete and generate the own RSA Keys
             infoClients.keyEncrypt="";
             RSAEncryption rsaEncryption = new RSAEncryption();
-            infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameDestination);
+            RSASigning rsaSigning = new RSASigning();
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameDestination;
+            infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameDestination,filePublicKey);
             if(infoClients.keyEncrypt !=""){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Devolviendo llaves generadas.");
                 return Ok(infoClients);
@@ -136,12 +140,17 @@ namespace servicioCliente.Controllers
                         "Request en ValidateUserKey ObjKeyService recibido "+ string.Join(", ",jsonObj));
             RSAEncryption RSAencr = new RSAEncryption();
             //Check if the key container exist
-            if(RSAencr.KeysPartnerExists(infoClients.userNameOrigin)){
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameDestination;
+            if(RSAencr.KeysPartnerExists(infoClients.userNameOrigin, filePublicKey)){
                 return Ok(new {Result= true});
             }
             else{
                 return Ok(new{Result = false});
             }
+        }
+
+        public void EncryptMessage(InteractionModel interactModel){
+            
         }
     }
 }

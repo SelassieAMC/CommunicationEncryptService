@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 using servicioCliente.AppUtils;
@@ -11,11 +12,11 @@ namespace servicioCliente.Encryptionlogic{
         public FileWriter fw;
         public RSAEncryption(){}
         ///Generation RSA Keys
-        public string GeneratePubPrivKeys(string partnerKeys)
+        public string GeneratePubPrivKeys(string partnerKeys, string publicKeyFile)
         {
             RSAModel rsaModel = new RSAModel();
             FileWriter.WriteOnEvents(EventLevel.Info,"Verificando la existencia de la llave a generar.");
-            if(KeysPartnerExists(partnerKeys)){
+            if(KeysPartnerExists(partnerKeys,publicKeyFile)){
                 DeleteKeysPartner(partnerKeys);
             }
             rsaModel = GenerateOwnkeyEncrypts(partnerKeys);
@@ -62,7 +63,7 @@ namespace servicioCliente.Encryptionlogic{
         /// </summary>
         /// <param name="containerName"></param>
         /// <returns>true = Existen;false = No existen</returns>
-        public bool KeysPartnerExists(string containerName){
+        public bool KeysPartnerExists(string containerName, string publicKeyFile){
             CspParameters cspParameters = new CspParameters{
                 Flags =CspProviderFlags.UseExistingKey,
                 KeyContainerName = "OwnkeyEncrypts"+containerName
@@ -70,8 +71,15 @@ namespace servicioCliente.Encryptionlogic{
             try
             {
                 RSACryptoServiceProvider RSAcsp = new RSACryptoServiceProvider(cspParameters);
-                FileWriter.WriteOnEvents(EventLevel.Atention,"La llave solicitada ya existe.");
-                return true;
+                FileWriter.WriteOnEvents(EventLevel.Info,"La llave existe en el contenedor.");
+                if(File.Exists(publicKeyFile)){
+                    FileWriter.WriteOnEvents(EventLevel.Info,"La llave publica del receptor existe.");
+                    return true;
+                }else{
+                    FileWriter.WriteOnEvents(EventLevel.Atention,"La llave publica del receptor no existe.");
+                    DeleteKeysPartner(containerName);
+                }
+                return false;
             }
             catch (System.Exception ex)
             {
