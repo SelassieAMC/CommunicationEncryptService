@@ -65,7 +65,7 @@ namespace servicioCliente.Encryptionlogic{
         /// <returns>true = Existen;false = No existen</returns>
         public bool KeysPartnerExists(string containerName, string publicKeyFile){
             CspParameters cspParameters = new CspParameters{
-                Flags =CspProviderFlags.UseExistingKey,
+                Flags = CspProviderFlags.UseExistingKey,
                 KeyContainerName = "OwnkeyEncrypts"+containerName
             };
             try
@@ -108,6 +108,11 @@ namespace servicioCliente.Encryptionlogic{
                 FileWriter.WriteOnEvents(EventLevel.Exception,"Error intentando eliminar las llaves de "+containerName+". "+ex.Message);
                 return false;
             }
+        }
+
+        internal string EncryptAESKey(string privateKey)
+        {
+            throw new NotImplementedException();
         }
     }
 }

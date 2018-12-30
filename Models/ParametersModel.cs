@@ -9,5 +9,6 @@ namespace servicioCliente.Models
         public string EndpointServer { get; set; }
         public string RequestKeyPartner { get; set; }
         public int KeyRSASize { get; set; }
+        public int KeyAESSize { get; set; }
     }
 }

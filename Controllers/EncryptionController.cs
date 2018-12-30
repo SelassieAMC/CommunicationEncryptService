@@ -12,6 +12,7 @@ using servicioCliente.Models;
 using servicioCliente.ServiceServer;
 using static servicioCliente.AppUtils.Enums;
 using servicioCliente.SignLogic;
+using servicioCliente.EncryptionLogic;
 
 namespace servicioCliente.Controllers
 {
@@ -93,7 +94,6 @@ namespace servicioCliente.Controllers
             //Delete and generate the own RSA Keys
             infoClients.keyEncrypt="";
             RSAEncryption rsaEncryption = new RSAEncryption();
-            RSASigning rsaSigning = new RSASigning();
             string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameDestination;
             infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameDestination,filePublicKey);
             if(infoClients.keyEncrypt !=""){
@@ -140,7 +140,8 @@ namespace servicioCliente.Controllers
                         "Request en ValidateUserKey ObjKeyService recibido "+ string.Join(", ",jsonObj));
             RSAEncryption RSAencr = new RSAEncryption();
             //Check if the key container exist
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameDestination;
+            //Take origin as destination, this methos is called for server keys
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameOrigin;
             if(RSAencr.KeysPartnerExists(infoClients.userNameOrigin, filePublicKey)){
                 return Ok(new {Result= true});
             }
@@ -151,6 +152,38 @@ namespace servicioCliente.Controllers
 
         public void EncryptMessage(InteractionModel interactModel){
             
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+interactModel.userNameDestination;
+            //byte[] dataMsn = 
+            RSAEncryption rsaEncrypt = new RSAEncryption();
+            RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination);
+            AESEncryption aesEncryption = new AESEncryption(parameters.Value.KeyAESSize);
+            ResponseEncryptAES responseAES = new ResponseEncryptAES();
+            //Busca llave publica RSA destino
+            if(rsaEncrypt.KeysPartnerExists(interactModel.userNameDestination,filePublicKey)){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Llaves RSA para cifrado encontradas.");
+                FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando firmado de mensaje.");
+                //Firma hash de mensaje con RSA
+                ResponseSignData responseSign = new ResponseSignData();
+                responseSign = rsaSigning.signData(interactModel.mensaje);
+                if(responseSign.result){
+                    //Cifrado de mensaje
+                    if(aesEncryption.generateProperties()){
+                        //Por implementar
+                        responseAES = aesEncryption.EncryptMessage(interactModel.mensaje);
+                    } 
+                }else{
+                    FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de mensaje, verificar logs anteriores.");
+                }
+            }else{
+                FileWriter.WriteOnEvents(EventLevel.Error,
+                    "Imposible cifrar mensaje, llaves RSA para origen:"+
+                    interactModel.userNameOrigin+"\tdestino:"+interactModel.userNameDestination+"no encontradas");
+            }
+            //Encripta llave AES - por implementar
+            string encryptedKey = rsaEncrypt.EncryptAESKey(responseAES.privateKey);
+            //Hash identificacion
+            //hash(origin,destino);
+            //Llama servidor y envia modelo
         }
     }
 }
