@@ -65,5 +65,26 @@ namespace servicioCliente.ServiceServer
                 return HttpStatusCode.NotFound;
             } 
         }
+
+        public async Task<HttpStatusCode> SendMessage(SendMessageModel modelRequest){
+            try
+            {
+                var myRequest = (HttpWebRequest)WebRequest.Create("http://192.168.0.17:8080/key_service_ms/resources/keyService");
+                var responseInfo = (HttpWebResponse)myRequest.GetResponse();
+                if(responseInfo.StatusCode == HttpStatusCode.OK){
+                    HttpResponseMessage response = await client.PostAsJsonAsync(method,modelRequest);
+                    response.EnsureSuccessStatusCode();
+                    return response.StatusCode;
+                }else{
+                    FileWriter.WriteOnEvents(EventLevel.Error,"El servidor del servicio no responde. StatusCode:"+responseInfo.StatusCode);
+                    return responseInfo.StatusCode;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Error,"Servidor no disponible. "+ex.Message);
+                return HttpStatusCode.NotFound;
+            }
+        }
     }
 }

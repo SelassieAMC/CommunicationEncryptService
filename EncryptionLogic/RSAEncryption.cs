@@ -110,9 +110,33 @@ namespace servicioCliente.Encryptionlogic{
             }
         }
 
-        internal string EncryptAESKey(string privateKey)
+        internal ResponseEncryptAESKey EncryptAESKey(byte[] privateKey, string publicKey)
         {
-            throw new NotImplementedException();
+            ResponseEncryptAESKey response = new ResponseEncryptAESKey();
+            FileWriter.WriteOnEvents(EventLevel.Info,"Buscando llave publica en: "+publicKey);
+            if(File.Exists(publicKey)){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Llave publica encontrada!!!.");
+                RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
+                try
+                {
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Leyendo contenido llave publica.");
+                    string xmlKey = File.ReadAllText(publicKey);
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Importando llave para proceso de cifrado");
+                    RSA.FromXmlString(xmlKey);
+                    response.encryptedKey = RSA.Encrypt(privateKey,true);
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Llave simetrica cifrada de manera exitosa.!!");
+                    response.resul = true;
+                }
+                catch (System.Exception ex)
+                {
+                    FileWriter.WriteOnEvents(EventLevel.Exception,"Error en el proceso de cifrado de llave AES. "+ex.Message);
+                    response.resul = false;
+                }
+            }else{
+                FileWriter.WriteOnEvents(EventLevel.Info,"No se encontro la llave publica para cifrado.");
+                response.resul = false;
+            }
+            return response;
         }
     }
 }

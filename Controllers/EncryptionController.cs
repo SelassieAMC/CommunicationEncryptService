@@ -149,41 +149,109 @@ namespace servicioCliente.Controllers
                 return Ok(new{Result = false});
             }
         }
-
-        public void EncryptMessage(InteractionModel interactModel){
-            
+        /// <summary>
+        /// Funcion E - Cifrado de mensaje, envio a servidor de mensaje cifrado en AES, firma del mensaje, llave simetrica cifrada y firma de identificacion
+        /// </summary>
+        /// <param name="interactModel">Modelo de mensaje y datos</param>
+        /// <returns>Transaccion satisfactoria o fallida</returns>
+        public bool EncryptMessage(InteractionModel interactModel){
+            //Generate url's file
             string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+interactModel.userNameDestination;
-            //byte[] dataMsn = 
+            //Initialize models and classes
             RSAEncryption rsaEncrypt = new RSAEncryption();
             RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination);
             AESEncryption aesEncryption = new AESEncryption(parameters.Value.KeyAESSize);
+            ResponseSignData responseSign = new ResponseSignData();
+            ResponseSignData responseSignId = new ResponseSignData();
             ResponseEncryptAES responseAES = new ResponseEncryptAES();
+            ResponseEncryptAESKey responseAESKey = new ResponseEncryptAESKey();
             //Busca llave publica RSA destino
             if(rsaEncrypt.KeysPartnerExists(interactModel.userNameDestination,filePublicKey)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Llaves RSA para cifrado encontradas.");
                 FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando firmado de mensaje.");
                 //Firma hash de mensaje con RSA
-                ResponseSignData responseSign = new ResponseSignData();
                 responseSign = rsaSigning.signData(interactModel.mensaje);
                 if(responseSign.result){
                     //Cifrado de mensaje
                     if(aesEncryption.generateProperties()){
-                        //Por implementar
                         responseAES = aesEncryption.EncryptMessage(interactModel.mensaje);
-                    } 
+                        if(!responseAES.result){
+                            FileWriter.WriteOnEvents(EventLevel.Error,"Error en el proceso de cifrado de mensaje, verifique los eventos previos.");
+                            return false;
+                        }
+                    }
                 }else{
                     FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de mensaje, verificar logs anteriores.");
+                    return false;
                 }
             }else{
                 FileWriter.WriteOnEvents(EventLevel.Error,
                     "Imposible cifrar mensaje, llaves RSA para origen:"+
                     interactModel.userNameOrigin+"\tdestino:"+interactModel.userNameDestination+"no encontradas");
+                    return false;
+            }   
+            //Cifra llave AES
+            if(responseAES.privateKey != null){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando proceso de cifrado llaves AES con RSA");
+                responseAESKey = rsaEncrypt.EncryptAESKey(responseAES.privateKey,filePublicKey);
+            }else{
+                FileWriter.WriteOnEvents(EventLevel.Error,"Error en cifrado llave AES con RSA, no existe la llave de AES.");
+                return false;
             }
-            //Encripta llave AES - por implementar
-            string encryptedKey = rsaEncrypt.EncryptAESKey(responseAES.privateKey);
-            //Hash identificacion
-            //hash(origin,destino);
-            //Llama servidor y envia modelo
+            //Generate de sign for server identification
+            responseSignId = rsaSigning.signData(interactModel.userNameOrigin+interactModel.userNameDestination);
+            if(!responseSignId.result){
+                FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de identificacion contra servidor, verificar logs anteriores.");
+                return false;
+            }
+            //Call the server service and send the data model
+            ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage);
+            SendMessageModel sendFirstMessage = new SendMessageModel{
+                encryptedMessage = responseAES.encryptedData,
+                encryptSignature = responseSign.signData,
+                encryptedKey = responseAESKey.encryptedKey,
+                idSignature = responseSignId.signData,
+                initVector = responseAES.InitVector
+            };
+            try
+            {
+                HttpStatusCode resultCode = new HttpStatusCode();
+                Task<HttpStatusCode> response = server.SendMessage(sendFirstMessage);
+                response.ContinueWith(task=>{
+                    resultCode = task.Result;
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                //Check the response values, if isn´t success set false
+                if(resultCode.Equals(404)){
+                    FileWriter.WriteOnEvents(EventLevel.Atention,"Intento de envio no satisfactorio. resultCode:"+ resultCode);
+                    return false;
+                }
+                else{
+                    FileWriter.WriteOnEvents(EventLevel.Info,"Llave enviada de forma satisfactoria. resultCode:"+ resultCode);
+                    return true;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en intento de envio de mensaje a servidor. "+ ex.Message);
+                return false;
+            }
+        }
+        /// <summary>
+        /// Funcion F - Recibe mensaje del servidor
+        /// </summary>
+        /// <param name="messageModel"></param>
+        /// <returns></returns>
+        public IActionResult ReceiveMessage(SendMessageModel messageModel){
+            //Descifra llave AES
+
+            //Descifra mensaje
+
+            //Verifica firma
+
+            //Muestra mensaje
+
+            //confirma respuesta
+            return Ok();
         }
     }
 }
