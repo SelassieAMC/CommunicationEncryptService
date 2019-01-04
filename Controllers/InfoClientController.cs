@@ -19,8 +19,6 @@ namespace servicioCliente.Controllers
         }
         [HttpGet]
         public IActionResult GetIPAddress(){
-            // IPHostEntry client = Dns.GetHostEntry(Dns.GetHostAddresses("localhost").ToString()); 
-            // var ip = client.AddressList;
             string ip = "";
             FileWriter.WriteOnEvents(EventLevel.Info,"Consultando direccion IP cliente.");
             try

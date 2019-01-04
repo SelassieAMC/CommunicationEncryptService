@@ -165,14 +165,14 @@ namespace servicioCliente.Controllers
             ResponseSignData responseSignId = new ResponseSignData();
             ResponseEncryptAES responseAES = new ResponseEncryptAES();
             ResponseEncryptAESKey responseAESKey = new ResponseEncryptAESKey();
-            //Busca llave publica RSA destino
+            // Looking for partner RSA public key 
             if(rsaEncrypt.KeysPartnerExists(interactModel.userNameDestination,filePublicKey)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Llaves RSA para cifrado encontradas.");
                 FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando firmado de mensaje.");
-                //Firma hash de mensaje con RSA
+                //Sign data with RSA Private Key
                 responseSign = rsaSigning.signData(interactModel.mensaje);
                 if(responseSign.result){
-                    //Cifrado de mensaje
+                    //Encrypt Message
                     if(aesEncryption.generateProperties()){
                         responseAES = aesEncryption.EncryptMessage(interactModel.mensaje);
                         if(!responseAES.result){
@@ -190,7 +190,7 @@ namespace servicioCliente.Controllers
                     interactModel.userNameOrigin+"\tdestino:"+interactModel.userNameDestination+"no encontradas");
                     return false;
             }   
-            //Cifra llave AES
+            //Encrypt AES Key
             if(responseAES.privateKey != null){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando proceso de cifrado llaves AES con RSA");
                 responseAESKey = rsaEncrypt.EncryptAESKey(responseAES.privateKey,filePublicKey);
