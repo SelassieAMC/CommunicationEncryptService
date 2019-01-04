@@ -40,7 +40,7 @@ namespace servicioCliente.ServiceServer
         /// <param name="method"></param>
         private void DefineCallParams(string baseURI, string method)
         {
-            FileWriter.WriteOnEvents(EventLevel.Info,"Inicio peticion a servidor "+baseURI+method);
+            FileWriter.WriteOnEvents(EventLevel.Info,"Inicio peticion a servidor "+baseURI+method.Substring(1));
             client.BaseAddress = new Uri(baseURI);
             this.method = method;
             client.DefaultRequestHeaders.Accept.Clear();
@@ -54,7 +54,6 @@ namespace servicioCliente.ServiceServer
             {
                 string uriComplete = client.BaseAddress+method.Substring(1);
                 var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
-                FileWriter.WriteOnEvents(EventLevel.Info,"Llamado a servicio: "+uriComplete);
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,infoClients);
@@ -77,7 +76,6 @@ namespace servicioCliente.ServiceServer
             {
                 string uriComplete = client.BaseAddress+method.Substring(1);
                 var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
-                FileWriter.WriteOnEvents(EventLevel.Info,"Llamado a servicio: "+uriComplete);
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,modelRequest);
