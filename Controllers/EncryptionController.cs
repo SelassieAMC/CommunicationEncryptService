@@ -211,7 +211,8 @@ namespace servicioCliente.Controllers
                 encryptSignature = responseSign.signData,
                 encryptedKey = responseAESKey.encryptedKey,
                 idSignature = responseSignId.signData,
-                initVector = responseAES.InitVector
+                initVector = responseAES.InitVector,
+                userNameOrigin = interactModel.userNameOrigin
             };
             try
             {
@@ -242,16 +243,34 @@ namespace servicioCliente.Controllers
         /// <param name="messageModel"></param>
         /// <returns></returns>
         public IActionResult ReceiveMessage(SendMessageModel messageModel){
-            //Descifra llave AES
-
-            //Descifra mensaje
-
-            //Verifica firma
-
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+messageModel.userNameOrigin;
+            RSAEncryption rsaEncryption = new RSAEncryption();
+            AESEncryption aesEncryption = new AESEncryption();
+            RSASigning rsaSigning = new RSASigning();
+            
+            //Decrypt symmetric key
+            ResponseRSADecryption rsaDecryptResponse = new ResponseRSADecryption();
+            rsaDecryptResponse = rsaEncryption.DecryptAESKey(messageModel.encryptedKey, messageModel.userNameOrigin);
+            if(!rsaDecryptResponse.result){
+                FileWriter.WriteOnEvents(EventLevel.Error,"Error descifrando llave AES con RSA.");
+                return BadRequest(new {result = false});
+            }
+            //Decrypt Message
+            ResponseAESDecryption responseAESDecryption = new ResponseAESDecryption();
+            responseAESDecryption = aesEncryption.DecryptMessage(messageModel,rsaDecryptResponse.decryptedKey);
+            if(!responseAESDecryption.result){
+                FileWriter.WriteOnEvents(EventLevel.Error,"Error descifrando mensaje con AES.");
+                return BadRequest(new {result = false});
+            }
+            //Validate Sign
+            if(!rsaSigning.validateSignAndHash(responseAESDecryption.decryptedMessage,messageModel.encryptSignature,filePublicKey)){ 
+                FileWriter.WriteOnEvents(EventLevel.Atention,"La información recibida es corrupta.");
+                return BadRequest(new {result = false});
+            }
             //Muestra mensaje
 
             //confirma respuesta
-            return Ok();
+            return Ok(new{result = true});
         }
     }
 }

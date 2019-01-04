@@ -9,6 +9,7 @@ namespace servicioCliente.Models
 
     public class SendMessageModel
     {
+        public string userNameOrigin { get; set; }
         public byte[] encryptedMessage { get; set; }
         public byte[] encryptSignature { get; set; }
         public byte[] encryptedKey { get; set; }

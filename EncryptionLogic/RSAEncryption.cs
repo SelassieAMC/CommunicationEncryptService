@@ -138,5 +138,31 @@ namespace servicioCliente.Encryptionlogic{
             }
             return response;
         }
+
+        internal ResponseRSADecryption DecryptAESKey(byte[] encryptedKey, string containerName)
+        {
+            ResponseRSADecryption response = new ResponseRSADecryption{
+                result = false
+            };
+            byte[] decryptedKey;
+
+            CspParameters cspParameters = new CspParameters{
+                Flags = CspProviderFlags.UseExistingKey,
+                KeyContainerName = "OwnkeyEncrypts"+containerName
+            };
+            try
+            {
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(cspParameters); 
+                FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de descifrado de llave AES."); 
+                decryptedKey = rsa.Decrypt(encryptedKey,true);
+                response.decryptedKey = decryptedKey;
+                FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de descifrado de llave AES finalizada correctamente");
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Error intentando eliminar las llaves de "+containerName+". "+ex.Message);
+            }
+            return response;
+        }
     }
 }

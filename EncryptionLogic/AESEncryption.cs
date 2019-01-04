@@ -12,8 +12,12 @@ namespace servicioCliente.EncryptionLogic
         protected int keySize;
         public AesCryptoServiceProvider aes;
         public AESEncryption(int keySize){
-                aes = new AesCryptoServiceProvider();
+            aes = new AesCryptoServiceProvider();
             this.keySize = keySize;
+        }
+
+        public AESEncryption(){
+            aes = new AesCryptoServiceProvider();
         }
 
         public bool generateProperties(){
@@ -69,6 +73,36 @@ namespace servicioCliente.EncryptionLogic
                     FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en intento de cifrado. "+ex.Message);
                 }
                 return response;
+        }
+
+        internal ResponseAESDecryption DecryptMessage(SendMessageModel messageModel, byte[] decryptedKey)
+        {
+            ResponseAESDecryption response = new ResponseAESDecryption{
+                result = false
+            };
+            // Create an AesCryptoServiceProvider object with the specified key and IV.
+            using(AesCryptoServiceProvider aesDecrypt = new AesCryptoServiceProvider()){
+                FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de descifrado de mensaje.");
+                aesDecrypt.Key = decryptedKey;
+                aesDecrypt.IV = messageModel.initVector;
+                // Create a decryptor to perform the stream transform.
+                ICryptoTransform decryptor = aesDecrypt.CreateDecryptor(aesDecrypt.Key,aesDecrypt.IV);
+                // Create the streams used for decryption.
+                using (MemoryStream msDecrypt = new MemoryStream(messageModel.encryptedMessage))
+                {
+                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    {
+                        using (StreamReader srDecrypt = new StreamReader(csDecrypt))
+                        {
+                            // Read the decrypted bytes from the decrypting stream and place them in a string.
+                            response.decryptedMessage = srDecrypt.ReadToEnd();
+                            response.result = true;
+                            FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de descifrado de mensaje finalizado correctamente");
+                        }
+                    }
+                }
+            }
+            return response;
         }
     }
 }

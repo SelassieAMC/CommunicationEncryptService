@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using servicioCliente.AppUtils;
@@ -18,7 +19,7 @@ namespace servicioCliente.SignLogic
             };
             findPrivateKey(cspParameters);
         }
-
+        public RSASigning(){}
         private void findPrivateKey(CspParameters rsaParameters)
         {
             try
@@ -65,6 +66,28 @@ namespace servicioCliente.SignLogic
                 rsaCryptoServ.Dispose();
             }
             return encryptedData;
+        }
+
+        internal bool validateSignAndHash(string decryptedMessage,byte[] signature,string publicKey)
+        {
+            bool result = false;
+            RSACryptoServiceProvider rsaCSP = new RSACryptoServiceProvider();
+            ASCIIEncoding ByteConverter = new ASCIIEncoding();
+            try
+            {
+                byte[] decryptMessage = ByteConverter.GetBytes(decryptedMessage);
+                FileWriter.WriteOnEvents(EventLevel.Info,"Leyendo contenido llave publica para verificacion de firmas.");
+                string xmlKey = File.ReadAllText(publicKey);
+                FileWriter.WriteOnEvents(EventLevel.Info,"Importando llave para proceso de verificacion de firma");
+                rsaCSP.FromXmlString(xmlKey);
+                result = rsaCSP.VerifyData(decryptMessage,new SHA512CryptoServiceProvider(),signature);
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Error en el proceso de validacion de firma. "+ex.Message);
+                result = false;
+            }
+            return result;
         }
     }
 }

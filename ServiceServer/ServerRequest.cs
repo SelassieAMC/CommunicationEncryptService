@@ -33,7 +33,11 @@ namespace servicioCliente.ServiceServer
                 FileWriter.WriteOnEvents(EventLevel.Atention,"Reintentando seteo numero "+(++count));
             }
         }
-
+        /// <summary>
+        /// Define param for making the call to the server
+        /// </summary>
+        /// <param name="baseURI"></param>
+        /// <param name="method"></param>
         private void DefineCallParams(string baseURI, string method)
         {
             FileWriter.WriteOnEvents(EventLevel.Info,"Inicio peticion a servidor "+baseURI+method);
@@ -48,7 +52,9 @@ namespace servicioCliente.ServiceServer
         public async Task<HttpStatusCode> RequestPartnerKey(InfoClients infoClients){
             try
             {
-                var myRequest = (HttpWebRequest)WebRequest.Create("http://192.168.0.17:8080/key_service_ms/resources/keyService");
+                string uriComplete = client.BaseAddress+method.Substring(1);
+                var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
+                FileWriter.WriteOnEvents(EventLevel.Info,"Llamado a servicio: "+uriComplete);
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,infoClients);
@@ -69,7 +75,9 @@ namespace servicioCliente.ServiceServer
         public async Task<HttpStatusCode> SendMessage(SendMessageModel modelRequest){
             try
             {
-                var myRequest = (HttpWebRequest)WebRequest.Create("http://192.168.0.17:8080/key_service_ms/resources/keyService");
+                string uriComplete = client.BaseAddress+method.Substring(1);
+                var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
+                FileWriter.WriteOnEvents(EventLevel.Info,"Llamado a servicio: "+uriComplete);
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,modelRequest);

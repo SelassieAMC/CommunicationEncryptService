@@ -17,4 +17,14 @@ namespace servicioCliente.Models
         public byte[] encryptedKey { get; set; }
         public byte[] initVector { get; set; }
     }
+
+    public class ResponseRSADecryption{
+        public bool result { get; set; }
+        public byte[] decryptedKey { get; set; }
+    }
+
+    public class ResponseAESDecryption{
+        public bool result { get; set; }
+        public string decryptedMessage { get; set; }
+    }
 }
