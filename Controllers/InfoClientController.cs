@@ -23,8 +23,18 @@ namespace servicioCliente.Controllers
             FileWriter.WriteOnEvents(EventLevel.Info,"Consultando direccion IP cliente.");
             try
             {
-                IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-                ip = host.AddressList[1].ToString();
+                // IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+                // foreach(var address in host.AddressList){
+                //     if()
+                // }
+                // ip = host.AddressList[1].ToString();
+                IPAddress[] localIPs = Dns.GetHostAddresses(Dns.GetHostName());
+                foreach (IPAddress a in localIPs)
+                {
+                    if( IPAddress.Parse(a.ToString()).AddressFamily == AddressFamily.InterNetwork ){
+                        ip = a.ToString();
+                    }
+                }
                 FileWriter.WriteOnEvents(EventLevel.Info,"Direccion IP obtenida "+ip);
                 return Ok(new {result = ip});
             }

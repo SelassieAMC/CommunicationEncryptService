@@ -7,6 +7,7 @@ namespace servicioCliente.Models
         public string PrivKeyFile { get; set; }
         public string LogEventsFile { get; set; }
         public string EndpointServer { get; set; }
+        public string GetRequest { get; set; }
         public string RequestKeyPartner { get; set; }
         public string SendFirstMessage { get; set; }
         public int KeyRSASize { get; set; }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using servicioCliente.Models;
 using System;
+using System.Globalization;
 using System.IO;
 using static servicioCliente.AppUtils.Enums;
 
@@ -38,10 +39,11 @@ namespace servicioCliente.AppUtils
             string pathLogs = parameters.Value.FilesOutput+parameters.Value.LogEventsFile;
             try
             {
+                //string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff", CultureInfo.InvariantCulture);
                 using (StreamWriter file = new StreamWriter(@pathLogs, true))
                 {
                     string tabs = (eventLevel == EventLevel.Info || eventLevel == EventLevel.Error)?"\t\t":"\t";
-                    file.WriteLine(eventLevel+tabs+DateTime.Now+"\t"+message);
+                    file.WriteLine(eventLevel+tabs+DateTime.Now.ToString("MM/dd/yyyy hh:mm:ss.fff") +"\t\t"+message);
                 }
             }
             catch (System.Exception)
