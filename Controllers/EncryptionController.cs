@@ -37,7 +37,7 @@ namespace servicioCliente.Controllers
             FileWriter.WriteOnEvents(EventLevel.Info,"Request en GeneratekeyEncrypts ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+infoclient.userNameDestination+infoclient.userNameOrigin;
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+infoclient.userNameDestination+infoclient.userNameOrigin+".xml";
             infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination+infoclient.userNameOrigin,filePublicKey);
             //Call the server service to send my public key to my partner 
             if(SendMyPublicKey(infoclient)){
@@ -165,7 +165,7 @@ namespace servicioCliente.Controllers
             //Initialize models and classes
             SendMessageModel sendFirstMessage = new SendMessageModel();
             RSAEncryption rsaEncrypt = new RSAEncryption();
-            RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination);
+            RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination+interactModel.userNameOrigin);
             AESEncryption aesEncryption = new AESEncryption(parameters.Value.KeyAESSize);
             ResponseSignData responseSign = new ResponseSignData();
             ResponseSignData responseSignId = new ResponseSignData();
@@ -205,12 +205,12 @@ namespace servicioCliente.Controllers
                 return BadRequest(sendFirstMessage);
             }
             //Generate de sign for server identification
-            responseSignId = rsaSigning.signData(interactModel.userNameOrigin+interactModel.userNameDestination);
-            if(!responseSignId.result){
-                FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de identificacion contra servidor, verificar logs anteriores.");
+            //responseSignId = rsaSigning.signData(interactModel.userNameOrigin+interactModel.userNameDestination);
+            //if(!responseSignId.result){
+            //     FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de identificacion contra servidor, verificar logs anteriores.");
 
-                return BadRequest(sendFirstMessage);
-            }
+            //     return BadRequest(sendFirstMessage);
+            // }
             //Call the server service and send the data model
             ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage,parameters.Value.GetRequest);
             
@@ -220,6 +220,7 @@ namespace servicioCliente.Controllers
                 sendFirstMessage.idSignature = responseSignId.signData;
                 sendFirstMessage.initVector = responseAES.InitVector;
                 sendFirstMessage.userNameOrigin = interactModel.userNameOrigin;
+                sendFirstMessage.userNameDestination = interactModel.userNameDestination;
             
             FileWriter.WriteOnEvents(EventLevel.Info,"Solicitud de envio de llave exitoso.");
             return Ok(sendFirstMessage);
@@ -238,7 +239,7 @@ namespace servicioCliente.Controllers
             
             //Decrypt symmetric key
             ResponseRSADecryption rsaDecryptResponse = new ResponseRSADecryption();
-            rsaDecryptResponse = rsaEncryption.DecryptAESKey(messageModel.encryptedKey, messageModel.userNameOrigin);
+            rsaDecryptResponse = rsaEncryption.DecryptAESKey(messageModel.encryptedKey, messageModel.userNameDestination+messageModel.userNameOrigin);
             if(!rsaDecryptResponse.result){
                 FileWriter.WriteOnEvents(EventLevel.Error,"Error descifrando llave AES con RSA.");
                 return BadRequest(new {result = false});

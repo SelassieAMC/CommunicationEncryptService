@@ -21,7 +21,7 @@ namespace servicioCliente.AppUtils
                     Directory.CreateDirectory(@path);
                     WriteOnEvents(EventLevel.Info,"Path "+path+" creado.");
                 }
-                using (StreamWriter file = new StreamWriter(@path+fileName+".txt", false))
+                using (StreamWriter file = new StreamWriter(@path+fileName+".xml", false))
                 {
                     file.WriteLine(message);
                     WriteOnEvents(EventLevel.Info,"Escritura llave privada exitosa!!");
