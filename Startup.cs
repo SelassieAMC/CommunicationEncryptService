@@ -33,6 +33,12 @@ namespace servicioCliente
             services.Configure<ParametersModel>(Configuration.GetSection("Parameters"));
             
             services.AddOptions();
+            // services.AddCors(options =>
+            // {
+            //     options.AddPolicy("AllowSpecificOrigin",
+            //         builder => builder.WithOrigins("*"));
+            // });
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,6 +53,14 @@ namespace servicioCliente
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            //app.UseHttpsRedirection();
+            //app.UseCors("AllowSpecificOrigin");
+            app.UseCors(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());  
             app.UseMvc();
         }
     }

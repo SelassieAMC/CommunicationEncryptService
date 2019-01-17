@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.Extensions.Options;
 using servicioCliente.AppUtils;
 using servicioCliente.Models;
@@ -19,14 +21,14 @@ namespace servicioCliente.Encryptionlogic{
             if(KeysPartnerExists(partnerKeys,publicKeyFile)){
                 DeleteKeysPartner(partnerKeys);
             }
-            rsaModel = GenerateOwnkeyEncrypts(partnerKeys);
+            rsaModel = GenerateOwnkeyEncrypts(partnerKeys,publicKeyFile);
             return rsaModel.PublicKey;
         }
         /// <summary>
         /// Metodo que genera llaves publica y privada del algoritmo RSA
         /// </summary>
         /// <returns>Modelo con informacion de llaves generadas</returns>
-        private RSAModel GenerateOwnkeyEncrypts(string partnerKeys)
+        private RSAModel GenerateOwnkeyEncrypts(string partnerKeys,string pathPublicKey)
         {
             int keySize = FileWriter.parameters.Value.KeyRSASize;
             CspParameters cp = new CspParameters();
@@ -37,11 +39,11 @@ namespace servicioCliente.Encryptionlogic{
                 RSACryptoServiceProvider cryptoServiceProvider = new RSACryptoServiceProvider(keySize,cp);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de creacion de llaves.");
                 RSAParameters publicKey = cryptoServiceProvider.ExportParameters(false);
-                RSAParameters privateKey = cryptoServiceProvider.ExportParameters(true);
+                //RSAParameters privateKey = cryptoServiceProvider.ExportParameters(true);
                 //string publicKey = cryptoServiceProvider.ToXmlString(false);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de creacion de llaves RSA exitoso.");
-                string publicKeyString = GetStringFromKey(publicKey);
-                string privateKeyString = GetStringFromKey(privateKey);
+                string publicKeyString = GetStringFromKey(publicKey,pathPublicKey);
+                //string privateKeyString = GetStringFromKey(privateKey);
                 rsaModel.PublicKey = publicKeyString;
             }
             catch (System.Exception ex)
@@ -51,12 +53,30 @@ namespace servicioCliente.Encryptionlogic{
             return rsaModel;
         }
 
-        private string GetStringFromKey(RSAParameters publicKey)
+        private string GetStringFromKey(RSAParameters publicKey, string pathPublicKey)
         {
-            var stringWriter = new System.IO.StringWriter();
+            // var stringWriter = new System.IO.StringWriter();
+            // var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
+            // xmlSerializer.Serialize(stringWriter, publicKey);
+
+            XmlSerializer xs = new XmlSerializer(typeof(RSAParameters));
+            TextWriter tw = new StreamWriter(@pathPublicKey);
+            xs.Serialize(tw, publicKey);
+            tw.Close();
+            string xmlKey = File.ReadAllText(pathPublicKey);
+            File.Delete(pathPublicKey);
+            return xmlKey;
+            //return stringWriter.ToString();
+        }
+
+        private RSAParameters GetParamsFromString(string publicKeyPath)
+        {
             var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
-            xmlSerializer.Serialize(stringWriter, publicKey);
-            return stringWriter.ToString();
+            FileStream fs = new FileStream(publicKeyPath, FileMode.Open);
+            RSAParameters rsaParam;
+            rsaParam = (RSAParameters) xmlSerializer.Deserialize(fs);
+            fs.Close();
+            return rsaParam;
         }
         /// <summary>
         /// Valida si las llaves solicitadas existen
@@ -72,7 +92,7 @@ namespace servicioCliente.Encryptionlogic{
             {
                 RSACryptoServiceProvider RSAcsp = new RSACryptoServiceProvider(cspParameters);
                 FileWriter.WriteOnEvents(EventLevel.Info,"La llave existe en el contenedor.");
-                if(File.Exists(publicKeyFile)){
+                if(File.Exists(publicKeyFile+".xml")){
                     FileWriter.WriteOnEvents(EventLevel.Info,"La llave publica del receptor existe.");
                     return true;
                 }else{
@@ -112,17 +132,17 @@ namespace servicioCliente.Encryptionlogic{
 
         internal ResponseEncryptAESKey EncryptAESKey(byte[] privateKey, string publicKey)
         {
+            string filePublic = publicKey+".xml";
             ResponseEncryptAESKey response = new ResponseEncryptAESKey();
-            FileWriter.WriteOnEvents(EventLevel.Info,"Buscando llave publica en: "+publicKey);
-            if(File.Exists(publicKey)){
+            FileWriter.WriteOnEvents(EventLevel.Info,"Buscando llave publica en: "+filePublic);
+            if(File.Exists(filePublic)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Llave publica encontrada!!!.");
                 RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
                 try
                 {
                     FileWriter.WriteOnEvents(EventLevel.Info,"Leyendo contenido llave publica.");
-                    string xmlKey = File.ReadAllText(publicKey);
                     FileWriter.WriteOnEvents(EventLevel.Info,"Importando llave para proceso de cifrado");
-                    RSA.FromXmlString(xmlKey);
+                    RSA.ImportParameters(GetParamsFromString(filePublic));
                     response.encryptedKey = RSA.Encrypt(privateKey,true);
                     FileWriter.WriteOnEvents(EventLevel.Info,"Llave simetrica cifrada de manera exitosa.!!");
                     response.resul = true;
@@ -152,15 +172,18 @@ namespace servicioCliente.Encryptionlogic{
             };
             try
             {
-                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(cspParameters); 
+                RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(FileWriter.parameters.Value.KeyRSASize,cspParameters); 
+                RSAParameters publicKey = rsa.ExportParameters(false);
+                RSAParameters privateKey = rsa.ExportParameters(true);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Inicio proceso de descifrado de llave AES."); 
                 decryptedKey = rsa.Decrypt(encryptedKey,true);
                 response.decryptedKey = decryptedKey;
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de descifrado de llave AES finalizada correctamente");
+                response.result = true;
             }
             catch (System.Exception ex)
             {
-                FileWriter.WriteOnEvents(EventLevel.Exception,"Error intentando eliminar las llaves de "+containerName+". "+ex.Message);
+                FileWriter.WriteOnEvents(EventLevel.Exception,"Error descifrando llave aes"+ex.Message);
             }
             return response;
         }

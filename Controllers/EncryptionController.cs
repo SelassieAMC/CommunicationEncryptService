@@ -37,8 +37,8 @@ namespace servicioCliente.Controllers
             FileWriter.WriteOnEvents(EventLevel.Info,"Request en GeneratekeyEncrypts ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Generate the own RSA Keys
             RSAEncryption rsaEncryption = new RSAEncryption();
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoclient.userNameDestination;
-            infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination,filePublicKey);
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+infoclient.userNameDestination+infoclient.userNameOrigin+".xml";
+            infoclient.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoclient.userNameDestination+infoclient.userNameOrigin,filePublicKey);
             //Call the server service to send my public key to my partner 
             if(SendMyPublicKey(infoclient)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de generacion y envio de llaves realizado de forma correcta.");
@@ -52,7 +52,7 @@ namespace servicioCliente.Controllers
             FileWriter.WriteOnEvents(EventLevel.Info,"Llamado al servidor para entrega de llave privada.");
             try
             {
-                ServerRequest callPartner = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.RequestKeyPartner);
+                ServerRequest callPartner = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.RequestKeyPartner,parameters.Value.GetRequest);
                 HttpStatusCode resultCode = new HttpStatusCode();
                 Task<HttpStatusCode> response = callPartner.RequestPartnerKey(infoClients);
                 response.ContinueWith(task=>{
@@ -88,14 +88,18 @@ namespace servicioCliente.Controllers
                         "Request en RequestStoreKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Store partner's public key
             FileWriter.WriteOnFile(parameters.Value.FilesOutput,
-                        parameters.Value.PrivKeyFile+infoClients.userNameDestination,infoClients.keyEncrypt);
+                        parameters.Value.PubKeyFile+infoClients.userNameOrigin+infoClients.userNameDestination,infoClients.keyEncrypt);
             FileWriter.WriteOnEvents(EventLevel.Info,
-                        "Llave publica de "+ infoClients.userNameDestination+" almacenada.");
+                        "Llave publica de "+ infoClients.userNameOrigin+infoClients.userNameDestination+" almacenada.");
             //Delete and generate the own RSA Keys
             infoClients.keyEncrypt="";
             RSAEncryption rsaEncryption = new RSAEncryption();
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameDestination;
-            infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameDestination,filePublicKey);
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+infoClients.userNameOrigin+infoClients.userNameDestination;
+            infoClients.keyEncrypt = rsaEncryption.GeneratePubPrivKeys(infoClients.userNameOrigin+infoClients.userNameDestination,filePublicKey);
+            //Inverting usernames origin-destination
+            string auxUserName = infoClients.userNameOrigin;
+            infoClients.userNameOrigin = infoClients.userNameDestination;
+            infoClients.userNameDestination = auxUserName;
             if(infoClients.keyEncrypt !=""){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Devolviendo llaves generadas.");
                 return Ok(infoClients);
@@ -114,7 +118,7 @@ namespace servicioCliente.Controllers
             //Write Event
             var jsonObj = JsonConvert.SerializeObject(infoClients);
             FileWriter.WriteOnEvents(EventLevel.Info,
-                        "Request en RequestStoreKeys ObjKeyService recibido "+ string.Join(", ",jsonObj));
+                        "Request en StoreKey ObjKeyService recibido "+ string.Join(", ",jsonObj));
             //Check data
             if(infoClients.keyEncrypt == ""){
                 FileWriter.WriteOnEvents(EventLevel.Error,"Llave recibida vacia, no se puede almacenar.");
@@ -122,9 +126,9 @@ namespace servicioCliente.Controllers
             }
             //Store partner's public key
             FileWriter.WriteOnFile(parameters.Value.FilesOutput,
-                        parameters.Value.PubKeyFile+infoClients.userNameOrigin,infoClients.keyEncrypt);
+                        parameters.Value.PubKeyFile+infoClients.userNameOrigin+infoClients.userNameDestination,infoClients.keyEncrypt);
             FileWriter.WriteOnEvents(EventLevel.Info,
-                        "Llave publica de "+ infoClients.userNameOrigin+" almacenada.");
+                        "Llave publica "+ infoClients.userNameOrigin+infoClients.userNameDestination+" almacenada.");
             return Ok();
         }
         /// <summary>
@@ -141,8 +145,8 @@ namespace servicioCliente.Controllers
             RSAEncryption RSAencr = new RSAEncryption();
             //Check if the key container exist
             //Take origin as destination, this methos is called for server keys
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+infoClients.userNameOrigin;
-            if(RSAencr.KeysPartnerExists(infoClients.userNameOrigin, filePublicKey)){
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+infoClients.userNameDestination+infoClients.userNameOrigin;
+            if(RSAencr.KeysPartnerExists(infoClients.userNameDestination+infoClients.userNameOrigin, filePublicKey)){
                 return Ok(new {Result= true});
             }
             else{
@@ -154,19 +158,21 @@ namespace servicioCliente.Controllers
         /// </summary>
         /// <param name="interactModel">Modelo de mensaje y datos</param>
         /// <returns>Transaccion satisfactoria o fallida</returns>
-        public bool EncryptMessage(InteractionModel interactModel){
+        [HttpPost]
+        public IActionResult EncryptMessage(InteractionModel interactModel){
             //Generate url's file
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+interactModel.userNameDestination;
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+interactModel.userNameDestination+interactModel.userNameOrigin;
             //Initialize models and classes
+            SendMessageModel sendFirstMessage = new SendMessageModel();
             RSAEncryption rsaEncrypt = new RSAEncryption();
-            RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination);
+            RSASigning rsaSigning = new RSASigning(interactModel.userNameDestination+interactModel.userNameOrigin);
             AESEncryption aesEncryption = new AESEncryption(parameters.Value.KeyAESSize);
             ResponseSignData responseSign = new ResponseSignData();
             ResponseSignData responseSignId = new ResponseSignData();
             ResponseEncryptAES responseAES = new ResponseEncryptAES();
             ResponseEncryptAESKey responseAESKey = new ResponseEncryptAESKey();
             // Looking for partner RSA public key 
-            if(rsaEncrypt.KeysPartnerExists(interactModel.userNameDestination,filePublicKey)){
+            if(rsaEncrypt.KeysPartnerExists(interactModel.userNameDestination+interactModel.userNameOrigin,filePublicKey)){
                 FileWriter.WriteOnEvents(EventLevel.Info,"Llaves RSA para cifrado encontradas.");
                 FileWriter.WriteOnEvents(EventLevel.Info,"Iniciando firmado de mensaje.");
                 //Sign data with RSA Private Key
@@ -177,18 +183,18 @@ namespace servicioCliente.Controllers
                         responseAES = aesEncryption.EncryptMessage(interactModel.mensaje);
                         if(!responseAES.result){
                             FileWriter.WriteOnEvents(EventLevel.Error,"Error en el proceso de cifrado de mensaje, verifique los eventos previos.");
-                            return false;
+                            return BadRequest(sendFirstMessage);
                         }
                     }
                 }else{
                     FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de mensaje, verificar logs anteriores.");
-                    return false;
+                    return BadRequest(sendFirstMessage);
                 }
             }else{
                 FileWriter.WriteOnEvents(EventLevel.Error,
                     "Imposible cifrar mensaje, llaves RSA para origen:"+
-                    interactModel.userNameOrigin+"\tdestino:"+interactModel.userNameDestination+"no encontradas");
-                    return false;
+                    interactModel.userNameOrigin+"\tdestino:"+interactModel.userNameDestination+" no encontradas");
+                    return BadRequest(sendFirstMessage);
             }   
             //Encrypt AES Key
             if(responseAES.privateKey != null){
@@ -196,61 +202,44 @@ namespace servicioCliente.Controllers
                 responseAESKey = rsaEncrypt.EncryptAESKey(responseAES.privateKey,filePublicKey);
             }else{
                 FileWriter.WriteOnEvents(EventLevel.Error,"Error en cifrado llave AES con RSA, no existe la llave de AES.");
-                return false;
+                return BadRequest(sendFirstMessage);
             }
             //Generate de sign for server identification
-            responseSignId = rsaSigning.signData(interactModel.userNameOrigin+interactModel.userNameDestination);
-            if(!responseSignId.result){
-                FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de identificacion contra servidor, verificar logs anteriores.");
-                return false;
-            }
+            //responseSignId = rsaSigning.signData(interactModel.userNameOrigin+interactModel.userNameDestination);
+            //if(!responseSignId.result){
+            //     FileWriter.WriteOnEvents(EventLevel.Error,"Falla en intento de firma de identificacion contra servidor, verificar logs anteriores.");
+
+            //     return BadRequest(sendFirstMessage);
+            // }
             //Call the server service and send the data model
-            ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage);
-            SendMessageModel sendFirstMessage = new SendMessageModel{
-                encryptedMessage = responseAES.encryptedData,
-                encryptSignature = responseSign.signData,
-                encryptedKey = responseAESKey.encryptedKey,
-                idSignature = responseSignId.signData,
-                initVector = responseAES.InitVector,
-                userNameOrigin = interactModel.userNameOrigin
-            };
-            try
-            {
-                HttpStatusCode resultCode = new HttpStatusCode();
-                Task<HttpStatusCode> response = server.SendMessage(sendFirstMessage);
-                response.ContinueWith(task=>{
-                    resultCode = task.Result;
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
-                //Check the response values, if isn´t success set false
-                if(resultCode.Equals(404)){
-                    FileWriter.WriteOnEvents(EventLevel.Atention,"Intento de envio no satisfactorio. resultCode:"+ resultCode);
-                    return false;
-                }
-                else{
-                    FileWriter.WriteOnEvents(EventLevel.Info,"Llave enviada de forma satisfactoria. resultCode:"+ resultCode);
-                    return true;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                FileWriter.WriteOnEvents(EventLevel.Exception,"Excepcion en intento de envio de mensaje a servidor. "+ ex.Message);
-                return false;
-            }
+            //ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage,parameters.Value.GetRequest);
+            
+                sendFirstMessage.encryptedMessage = responseAES.encryptedData;
+                sendFirstMessage.encryptSignature = responseSign.signData;
+                sendFirstMessage.encryptedKey = responseAESKey.encryptedKey;
+                sendFirstMessage.idSignature = responseSignId.signData;
+                sendFirstMessage.initVector = responseAES.InitVector;
+                sendFirstMessage.userNameOrigin = interactModel.userNameOrigin;
+                sendFirstMessage.userNameDestination = interactModel.userNameDestination;
+            
+            FileWriter.WriteOnEvents(EventLevel.Info,"Solicitud de envio de llave exitoso.");
+            return Ok(sendFirstMessage);
         }
         /// <summary>
         /// Funcion F - Recibe mensaje del servidor
         /// </summary>
         /// <param name="messageModel"></param>
         /// <returns></returns>
+        [HttpPost]
         public IActionResult ReceiveMessage(SendMessageModel messageModel){
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+messageModel.userNameOrigin;
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+messageModel.userNameDestination+messageModel.userNameOrigin;
             RSAEncryption rsaEncryption = new RSAEncryption();
             AESEncryption aesEncryption = new AESEncryption();
             RSASigning rsaSigning = new RSASigning();
             
             //Decrypt symmetric key
             ResponseRSADecryption rsaDecryptResponse = new ResponseRSADecryption();
-            rsaDecryptResponse = rsaEncryption.DecryptAESKey(messageModel.encryptedKey, messageModel.userNameOrigin);
+            rsaDecryptResponse = rsaEncryption.DecryptAESKey(messageModel.encryptedKey, messageModel.userNameDestination+messageModel.userNameOrigin);
             if(!rsaDecryptResponse.result){
                 FileWriter.WriteOnEvents(EventLevel.Error,"Error descifrando llave AES con RSA.");
                 return BadRequest(new {result = false});
@@ -268,9 +257,7 @@ namespace servicioCliente.Controllers
                 return BadRequest(new {result = false});
             }
             //Muestra mensaje
-
-            //confirma respuesta
-            return Ok(new{result = true});
+            return Ok(new{mensaje = responseAESDecryption.decryptedMessage});
         }
     }
 }

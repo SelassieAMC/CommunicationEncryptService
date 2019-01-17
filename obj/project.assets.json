@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v2.2": {
+      "EngineIoClientDotNet/0.9.22": {
+        "type": "package",
+        "compile": {
+          "lib/net45/EngineIoClientDotNet.dll": {}
+        },
+        "runtime": {
+          "lib/net45/EngineIoClientDotNet.dll": {}
+        }
+      },
       "Microsoft.AspNet.WebApi.Client/5.2.6": {
         "type": "package",
         "dependencies": {
@@ -22679,6 +22688,27 @@
     }
   },
   "libraries": {
+    "EngineIoClientDotNet/0.9.22": {
+      "sha512": "AboWMw39epQ9P98f0FNpUqqVhHnOuag+7ZPdzYzWOryqBKNt0k+zh8kv+/15rJDGGMxK0pVAk6w680iwSuMBvg==",
+      "type": "package",
+      "path": "engineioclientdotnet/0.9.22",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "engineioclientdotnet.0.9.22.nupkg.sha512",
+        "engineioclientdotnet.nuspec",
+        "lib/monoandroid10/EngineIoClientDotNet.dll",
+        "lib/monotouch10/EngineIoClientDotNet.dll",
+        "lib/net35/EngineIoClientDotNet.dll",
+        "lib/net40/EngineIoClientDotNet.dll",
+        "lib/net45/EngineIoClientDotNet.dll",
+        "lib/netcore45/EngineIoClientDotNet.dll",
+        "lib/portable-win81+wpa81/EngineIoClientDotNet.dll",
+        "lib/portable-wpa81+wp81/EngineIoClientDotNet.dll",
+        "lib/windowsphone8/EngineIoClientDotNet.dll",
+        "lib/xamarinios10/EngineIoClientDotNet.dll"
+      ]
+    },
     "Microsoft.AspNet.WebApi.Client/5.2.6": {
       "sha512": "AIgEc1up4pvH8kXy+eG1x4Qfqd6piAq3yk11pveCQXWNkkYoiKdflSmcJZuWcerdMcAaoF0xC/mWGoTW4vF4Dg==",
       "type": "package",
@@ -30708,8 +30738,13 @@
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.2": [
+      "EngineIoClientDotNet >= 0.9.22",
       "Microsoft.AspNetCore.App >= 2.2.0",
+<<<<<<< HEAD
       "Microsoft.AspNetCore.Hosting.WindowsServices >= 2.2.0",
+=======
+      "Microsoft.AspNetCore.Cors >= 2.2.0",
+>>>>>>> master
       "Microsoft.AspNetCore.Razor.Design >= 2.2.0",
       "Microsoft.Extensions.Logging.EventLog >= 2.2.0",
       "Microsoft.NETCore.App >= 2.2.0"
@@ -30754,13 +30789,21 @@
     "frameworks": {
       "netcoreapp2.2": {
         "dependencies": {
+          "EngineIoClientDotNet": {
+            "target": "Package",
+            "version": "[0.9.22, )"
+          },
           "Microsoft.AspNetCore.App": {
             "suppressParent": "All",
             "target": "Package",
             "version": "[2.2.0, )",
             "autoReferenced": true
           },
+<<<<<<< HEAD
           "Microsoft.AspNetCore.Hosting.WindowsServices": {
+=======
+          "Microsoft.AspNetCore.Cors": {
+>>>>>>> master
             "target": "Package",
             "version": "[2.2.0, )"
           },
@@ -30801,5 +30844,17 @@
         "#import": []
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "El paquete \"EngineIoClientDotNet 0.9.22\" se restauró con \".NETFramework,Version=v4.6.1\" en lugar de la plataforma de destino del proyecto \".NETCoreApp,Version=v2.2\". Puede que el paquete no sea totalmente compatible con el proyecto.",
+      "libraryId": "EngineIoClientDotNet",
+      "targetGraphs": [
+        ".NETCoreApp,Version=v2.2"
+      ]
+    }
+  ]
 }
