@@ -212,7 +212,7 @@ namespace servicioCliente.Controllers
             //     return BadRequest(sendFirstMessage);
             // }
             //Call the server service and send the data model
-            ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage,parameters.Value.GetRequest);
+            //ServerRequest server = new ServerRequest(parameters.Value.EndpointServer,parameters.Value.SendFirstMessage,parameters.Value.GetRequest);
             
                 sendFirstMessage.encryptedMessage = responseAES.encryptedData;
                 sendFirstMessage.encryptSignature = responseSign.signData;
@@ -232,7 +232,7 @@ namespace servicioCliente.Controllers
         /// <returns></returns>
         [HttpPost]
         public IActionResult ReceiveMessage(SendMessageModel messageModel){
-            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PrivKeyFile+messageModel.userNameOrigin;
+            string filePublicKey = parameters.Value.FilesOutput+parameters.Value.PubKeyFile+messageModel.userNameDestination+messageModel.userNameOrigin;
             RSAEncryption rsaEncryption = new RSAEncryption();
             AESEncryption aesEncryption = new AESEncryption();
             RSASigning rsaSigning = new RSASigning();

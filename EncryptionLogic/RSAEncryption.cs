@@ -75,7 +75,7 @@ namespace servicioCliente.Encryptionlogic{
             FileStream fs = new FileStream(publicKeyPath, FileMode.Open);
             RSAParameters rsaParam;
             rsaParam = (RSAParameters) xmlSerializer.Deserialize(fs);
-
+            fs.Close();
             return rsaParam;
         }
         /// <summary>
@@ -141,14 +141,8 @@ namespace servicioCliente.Encryptionlogic{
                 try
                 {
                     FileWriter.WriteOnEvents(EventLevel.Info,"Leyendo contenido llave publica.");
-                    string xmlKey = File.ReadAllText(filePublic);
                     FileWriter.WriteOnEvents(EventLevel.Info,"Importando llave para proceso de cifrado");
-                    //var csp = ExtractFromXml(xmlKey);
-                    //RSA.ImportParameters(csp);
-                    //var xml = ExtractKeyFromXml(xmlKey);
                     RSA.ImportParameters(GetParamsFromString(filePublic));
-                    //params = GetParamsFromString(filePublic);
-                    //RSA.FromXmlString(xmlKey);
                     response.encryptedKey = RSA.Encrypt(privateKey,true);
                     FileWriter.WriteOnEvents(EventLevel.Info,"Llave simetrica cifrada de manera exitosa.!!");
                     response.resul = true;
@@ -185,6 +179,7 @@ namespace servicioCliente.Encryptionlogic{
                 decryptedKey = rsa.Decrypt(encryptedKey,true);
                 response.decryptedKey = decryptedKey;
                 FileWriter.WriteOnEvents(EventLevel.Info,"Proceso de descifrado de llave AES finalizada correctamente");
+                response.result = true;
             }
             catch (System.Exception ex)
             {

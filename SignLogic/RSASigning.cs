@@ -77,9 +77,10 @@ namespace servicioCliente.SignLogic
             {
                 byte[] decryptMessage = ByteConverter.GetBytes(decryptedMessage);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Leyendo contenido llave publica para verificacion de firmas.");
-                string xmlKey = File.ReadAllText(publicKey);
+                rsaCSP.ImportParameters(GetParamsFromString(publicKey+".xml"));
+                //string xmlKey = File.ReadAllText(publicKey);
                 FileWriter.WriteOnEvents(EventLevel.Info,"Importando llave para proceso de verificacion de firma");
-                rsaCSP.FromXmlString(xmlKey);
+                //rsaCSP.FromXmlString(xmlKey);
                 result = rsaCSP.VerifyData(decryptMessage,new SHA512CryptoServiceProvider(),signature);
             }
             catch (System.Exception ex)
@@ -88,6 +89,16 @@ namespace servicioCliente.SignLogic
                 result = false;
             }
             return result;
+        }
+
+        private RSAParameters GetParamsFromString(string publicKeyPath)
+        {
+            var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(RSAParameters));
+            FileStream fs = new FileStream(publicKeyPath, FileMode.Open);
+            RSAParameters rsaParam;
+            rsaParam = (RSAParameters) xmlSerializer.Deserialize(fs);
+            fs.Close();
+            return rsaParam;
         }
     }
 }
