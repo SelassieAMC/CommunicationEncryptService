@@ -59,7 +59,7 @@ namespace servicioCliente.Controllers
                     resultCode = task.Result;
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
                 //Check the response values, if isn´t success set false
-                if(resultCode.Equals(404)){
+                if(resultCode.Equals(HttpStatusCode.NotFound)){
                     FileWriter.WriteOnEvents(EventLevel.Atention,"Respuesta no satisfactoria. resultCode:"+ resultCode);
                     result = false;
                 }

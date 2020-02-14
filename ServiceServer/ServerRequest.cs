@@ -42,8 +42,12 @@ namespace servicioCliente.ServiceServer
         /// <param name="method"></param>
         private void DefineCallParams(string baseURI, string method, string getRequest)
         {
+<<<<<<< HEAD
+            FileWriter.WriteOnEvents(EventLevel.Info,"Inicio peticion a servidor "+baseURI+method.Substring(1));
+=======
             client = new HttpClient();
             FileWriter.WriteOnEvents(EventLevel.Info,"Inicio peticion a servidor "+baseURI+method);
+>>>>>>> master
             client.BaseAddress = new Uri(baseURI);
             this.method = method;
             this.getRequest = getRequest;
@@ -58,7 +62,10 @@ namespace servicioCliente.ServiceServer
             {
                 string uriComplete = client.BaseAddress+getRequest;
                 var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
+<<<<<<< HEAD
+=======
                 FileWriter.WriteOnEvents(EventLevel.Info,"Llamado a servicio: "+method);
+>>>>>>> master
                 var responseInfo = (HttpWebResponse)myRequest.GetResponse();
                 if(responseInfo.StatusCode == HttpStatusCode.OK){
                     HttpResponseMessage response = await client.PostAsJsonAsync(method,infoClients);
@@ -76,6 +83,29 @@ namespace servicioCliente.ServiceServer
             } 
         }
 
+<<<<<<< HEAD
+        public async Task<HttpStatusCode> SendMessage(SendMessageModel modelRequest){
+            try
+            {
+                string uriComplete = client.BaseAddress+method.Substring(1);
+                var myRequest = (HttpWebRequest)WebRequest.Create(uriComplete);
+                var responseInfo = (HttpWebResponse)myRequest.GetResponse();
+                if(responseInfo.StatusCode == HttpStatusCode.OK){
+                    HttpResponseMessage response = await client.PostAsJsonAsync(method,modelRequest);
+                    response.EnsureSuccessStatusCode();
+                    return response.StatusCode;
+                }else{
+                    FileWriter.WriteOnEvents(EventLevel.Error,"El servidor del servicio no responde. StatusCode:"+responseInfo.StatusCode);
+                    return responseInfo.StatusCode;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                FileWriter.WriteOnEvents(EventLevel.Error,"Servidor no disponible. "+ex.Message);
+                return HttpStatusCode.NotFound;
+            }
+        }
+=======
         // public async Task<HttpStatusCode> SendMessage(SendMessageModel modelRequest){
         //     try
         //     {
@@ -98,5 +128,6 @@ namespace servicioCliente.ServiceServer
         //         return HttpStatusCode.NotFound;
         //     }
         // }
+>>>>>>> master
     }
 }

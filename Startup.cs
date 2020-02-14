@@ -31,10 +31,7 @@ namespace servicioCliente
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             //Adding read property from appsettings parameters section
             services.Configure<ParametersModel>(Configuration.GetSection("Parameters"));
-            // services.AddDataProtection().PersistKeysToFileSystem(
-            //         new DirectoryInfo(@Configuration.GetValue<string>("FilesOutput")));
-            //Only the local user can decrypt the keys
-            //services.AddDataProtection().ProtectKeysWithDpapi();
+            
             services.AddOptions();
             // services.AddCors(options =>
             // {
